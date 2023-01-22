@@ -1,0 +1,55 @@
+#!/bin/bash
+
+set -euo pipefail
+
+service="$1"
+typ="$2"
+
+touch versions.txt
+current_version="$(cat versions.txt | grep "$service " | cut -d' ' -f2 || echo '')"
+
+if [[ -z "$current_version" ]]; then
+  current_version="0.0.0"
+  echo "$service $current_version" >>versions.txt
+fi
+
+if [[ "$typ" == "major" ]]; then
+  new_version="$(bin/increment-version -M "$current_version")"
+elif [[ "$typ" == "minor" ]]; then
+  new_version="$(bin/increment-version -m "$current_version")"
+elif [[ "$typ" == "patch" ]]; then
+  new_version="$(bin/increment-version -p "$current_version")"
+else
+  echo "invalid type"
+  exit 1
+fi
+
+echo "$service $current_version $new_version"
+
+sed -i "s/$service $current_version/$service $new_version/g" versions.txt
+
+build_service() {
+  service="$1"
+  new_version="$2"
+
+  if [[ "$service" == "frontend" ]]; then
+    image="ghcr.io/openchainxyz/$service:$new_version"
+
+    pushd "frontend"
+    docker build . -t "$image" && docker push "$image"
+    exit_code=$?
+    popd
+
+    if [[ "$exit_code" != 0 ]]; then
+      return 1
+    fi
+  else
+    bazel run "//:release-$service"
+  fi
+}
+
+if ! build_service "$service" "$new_version"; then
+  sed -i "s/$service $new_version/$service $current_version/g" versions.txt
+  echo "release: failed to run release, rolling back version"
+  exit 1
+fi

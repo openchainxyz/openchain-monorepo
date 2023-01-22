@@ -1,0 +1,35 @@
+--- crypto/secp256k1/BUILD.bazel 2020-05-11 02:57:51.957716200 -0400
++++ crypto/secp256k1/BUILD.bazel 2020-05-11 02:57:20.086495200 -0400
+@@ -1,5 +1,15 @@
+ load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
++cc_library(
++  name = "libsecp256k1",
++  hdrs = glob([
++        "libsecp256k1/include/*.h",
++        "libsecp256k1/src/*.h",
++        "libsecp256k1/src/*.c",
++        "libsecp256k1/src/modules/recovery/*.h",
++  ]),
++)
++
+ go_library(
+     name = "go_default_library",
+     srcs = [
+@@ -8,10 +43,14 @@
+         "panic_cb.go",
+         "secp256.go",
+     ],
++    cdeps = [
++      ":libsecp256k1",
++    ],
+     cgo = True,
+     copts = [
+-        "-Icrypto/secp256k1/libsecp256k1",
+-        "-Icrypto/secp256k1/libsecp256k1/src",
++        "-Iexternal/com_github_ethereum_go_ethereum/crypto/secp256k1/libsecp256k1",
++        "-Iexternal/com_github_ethereum_go_ethereum/crypto/secp256k1/libsecp256k1/src",
++        "-Iexternal/com_github_ethereum_go_ethereum/crypto/secp256k1/libsecp256k1/include",
+     ],
+     importpath = "github.com/ethereum/go-ethereum/crypto/secp256k1",
+     visibility = ["//visibility:public"],

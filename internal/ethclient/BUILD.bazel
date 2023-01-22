@@ -1,0 +1,20 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "ethclient",
+    srcs = [
+        "client.go",
+        "types.go",
+    ],
+    importpath = "github.com/openchainxyz/openchainxyz-monorepo/internal/ethclient",
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "@com_github_ethereum_go_ethereum//:go-ethereum",
+        "@com_github_ethereum_go_ethereum//common",
+        "@com_github_ethereum_go_ethereum//common/hexutil",
+        "@com_github_ethereum_go_ethereum//core/types",
+        "@com_github_ethereum_go_ethereum//eth/tracers",
+        "@com_github_ethereum_go_ethereum//ethclient",
+        "@com_github_ethereum_go_ethereum//rpc",
+    ],
+)

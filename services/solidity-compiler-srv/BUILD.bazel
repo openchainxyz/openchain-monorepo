@@ -1,0 +1,18 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "solidity-compiler-srv",
+    srcs = [
+        "http.go",
+        "service.go",
+    ],
+    importpath = "github.com/openchainxyz/openchainxyz-monorepo/services/solidity-compiler-srv",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//internal/compiler",
+        "//services/solidity-compiler-srv/client",
+        "@com_github_gorilla_handlers//:handlers",
+        "@com_github_gorilla_mux//:mux",
+        "@com_github_sirupsen_logrus//:logrus",
+    ],
+)

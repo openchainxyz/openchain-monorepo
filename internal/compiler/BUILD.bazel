@@ -1,0 +1,28 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "compiler",
+    srcs = [
+        "compiler.go",
+        "helpers.go",
+        "solidity.go",
+        "storage.go",
+        "vyper.go",
+    ],
+    importpath = "github.com/openchainxyz/openchainxyz-monorepo/internal/compiler",
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "@com_github_ethereum_go_ethereum//accounts/abi",
+        "@com_github_ethereum_go_ethereum//common",
+        "@com_github_ethereum_go_ethereum//common/hexutil",
+    ],
+)
+
+go_test(
+    name = "compiler_test",
+    srcs = [
+        "solidity_test.go",
+        "vyper_test.go",
+    ],
+    embed = [":compiler"],
+)

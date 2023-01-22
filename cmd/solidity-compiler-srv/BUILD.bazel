@@ -1,0 +1,21 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "solidity-compiler-srv_lib",
+    srcs = ["main.go"],
+    importpath = "github.com/openchainxyz/openchainxyz-monorepo/cmd/solidity-compiler-srv",
+    visibility = ["//visibility:private"],
+    deps = [
+        "//internal/config",
+        "//services/vyper-compiler-srv",
+        "@com_github_sirupsen_logrus//:logrus",
+    ],
+)
+
+go_binary(
+    name = "solidity-compiler-srv",
+    embed = [":solidity-compiler-srv_lib"],
+    visibility = ["//visibility:public"],
+    pure = "on",
+    static = "on",
+)

@@ -1,0 +1,25 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "signature-database-srv",
+    srcs = [
+        "http.go",
+        "import.go",
+        "service.go",
+    ],
+    importpath = "github.com/openchainxyz/openchainxyz-monorepo/services/signature-database-srv",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//internal/core",
+        "//internal/discord",
+        "//internal/solidity",
+        "//services/signature-database-srv/client",
+        "//services/signature-database-srv/database",
+        "@com_github_bwmarrin_discordgo//:discordgo",
+        "@com_github_google_uuid//:uuid",
+        "@com_github_gorilla_handlers//:handlers",
+        "@com_github_gorilla_mux//:mux",
+        "@com_github_sirupsen_logrus//:logrus",
+        "@in_gopkg_yaml_v3//:yaml_v3",
+    ],
+)

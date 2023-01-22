@@ -1,0 +1,11 @@
+load("@bazel_gazelle//:def.bzl", "gazelle")
+load("//:bazel/release.bzl", "release")
+
+# gazelle:prefix github.com/openchainxyz/openchainxyz-monorepo
+gazelle(name = "gazelle")
+
+release("//cmd/signature-database-srv")
+
+release("//cmd/vyper-compiler-srv")
+
+release("//cmd/signature-scraper-srv")

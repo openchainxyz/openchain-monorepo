@@ -1,0 +1,230 @@
+openapi: 3.0.0
+info:
+  title: OpenChain API
+  description: The API docs for OpenChain
+  version: 0.0.1
+servers:
+  - url: https://api.openchain.xyz
+    description: Production server
+components:
+  schemas:
+    SignatureResponse:
+      properties:
+        function:
+          additionalProperties:
+            type: array
+            items:
+              type: object
+              properties:
+                name:
+                  type: string
+                filtered:
+                  type: boolean
+        event:
+          additionalProperties:
+            type: array
+            items:
+              type: object
+              properties:
+                name:
+                  type: string
+                filtered:
+                  type: boolean
+    ImportResponseDetails:
+      properties:
+        imported:
+          type: object
+          additionalProperties:
+            description: A map of imported signature to hash
+        duplicated:
+          type: object
+          additionalProperties:
+            description: A map of duplicated signature to hash
+        invalid:
+          type: array
+          description: A list of invalid signatures
+          items:
+            type: string
+
+paths:
+  /signature-database/v1/lookup:
+    get:
+      summary: Lookup signatures
+      description: Look up one or more function or event signatures by hash
+      parameters:
+        - in: query
+          name: function
+          required: false
+          description: A comma-delimited list of function hashes with leading 0x prefix
+          schema:
+            type: string
+        - in: query
+          name: event
+          required: false
+          description: A comma-delimited list of event hashes with leading 0x prefix
+          schema:
+            type: string
+        - in: query
+          name: filter
+          required: false
+          description: Whether or not to filter out junk results
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: The resulting signatures
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  result:
+                    $ref: '#/components/schemas/SignatureResponse'
+  /signature-database/v1/search:
+    get:
+      summary: Search signatures
+      description: Search signatures by name with wildcards, limited to the first 100 unordered results
+      parameters:
+        - in: query
+          name: query
+          required: true
+          description: The name of the function to search for. Use '*' and '?' for wildcards.
+          schema:
+            type: string
+        - in: query
+          name: filter
+          required: false
+          description: Whether or not to filter out junk results
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: The resulting signatures
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  result:
+                    $ref: '#/components/schemas/SignatureResponse'
+  /signature-database/v1/import:
+    post:
+      summary: Import new signatures
+      description: Import signatures by the raw function selector
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                function:
+                  type: array
+                  description: A list of function signatures, like 'transfer(address,uint256)'
+                  items:
+                    type: string
+                event:
+                  type: array
+                  description: A list of event signatures, like 'Transfer(address,address,uint256)'
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: The status of the import
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  result:
+                    type: object
+                    properties:
+                      function:
+                        $ref: '#/components/schemas/ImportResponseDetails'
+                      event:
+                        $ref: '#/components/schemas/ImportResponseDetails'
+  /signature-database/v1/stats:
+    get:
+      summary: Show database stats
+      description: Show the number of function and event signatures that the database has
+      responses:
+        '200':
+          description: The status of the import
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  result:
+                    type: object
+                    properties:
+                      count:
+                        type: object
+                        properties:
+                          function:
+                            type: number
+                          event:
+                            type: number
+  /signature-database/v1/export:
+    get:
+      summary: Export the database
+      description: Downloads a plain text export of the database
+      responses:
+        '200':
+          description: The export file, in comma-delimited format
+          content:
+            text/plain:
+              schema:
+                type: string
+                format: binary
+  /vyper-compiler/v1/compile:
+    post:
+        summary: Compile a Vyper contract
+        description: Compiles the given Vyper contract using the specified version
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  version:
+                    type: string
+                    required: true
+                    description: The Vyper version to use
+                  code:
+                    type: string
+                    required: true
+                    description: The code of the Vyper contract
+                  evm_version:
+                    type: string
+                    required: false
+                    description: The EVM version to target
+        responses:
+          '200':
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    status:
+                      type: string
+                      default: "success"
+                    abi:
+                      type: array
+                      items:
+                        type: object
+                    bytecode:
+                      type: string
+                    bytecode_runtime:
+                      type: string

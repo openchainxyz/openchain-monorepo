@@ -1,0 +1,8 @@
+#!/bin/bash
+
+while read -r line; do
+  service="$(echo "$line" | cut -d' ' -f1)"
+  version="$(echo "$line" | cut -d' ' -f2)"
+
+  echo "$service-version $version"
+done < "versions.txt"
