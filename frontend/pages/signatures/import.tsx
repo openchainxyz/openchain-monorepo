@@ -167,6 +167,17 @@ export default function Import() {
     const router = useRouter();
 
     const submitImport = () => {
+        // check if the imported data is empty
+        const importDataTrimmed = importData.trim();
+        if (importDataTrimmed.length === 0) {
+            setAlertData({
+                dismissed: false,
+                severity: 'warning',
+                message: `The import data field is empty, please provide some data.`,
+            });
+            return;
+        }
+
         setIsImporting(true);
         setAlertData((prevState) => ({
             ...prevState,
@@ -174,7 +185,7 @@ export default function Import() {
         }));
         fetch(`${apiEndpoint()}/v1/import`, {
             method: 'POST',
-            body: JSON.stringify(constructRequest(importData)),
+            body: JSON.stringify(constructRequest(importDataTrimmed)),
         })
             .then((res) => res.json())
             .then((json) => {

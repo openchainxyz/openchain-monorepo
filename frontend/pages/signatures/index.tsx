@@ -1,9 +1,8 @@
 import { useRouter } from 'next/router';
-
-import ResponseAppBar from '../../components/signatures/ResponseAppBar';
+import CloseIcon from '@mui/icons-material/Close';
 
 import Box from '@mui/material/Box';
-import { AlertColor, TextField } from '@mui/material';
+import { Alert, AlertColor, Collapse, TextField } from '@mui/material';
 import React, { useState } from 'react';
 
 import Table from '@mui/material/Table';
@@ -150,12 +149,25 @@ export default function Index() {
     });
 
     const doSearch = () => {
+        console.log('fuck');
+        // check if the imported data is empty
+        const queryTrimmed = query.trim();
+        if (queryTrimmed.length === 0) {
+            console.log('fuck2');
+            setAlertData({
+                dismissed: false,
+                severity: 'warning',
+                message: `The search field is empty.`,
+            });
+            return;
+        }
+
         setIsSearching(true);
         setAlertData((prevState) => ({
             ...prevState,
             dismissed: true,
         }));
-        const [method, params, searchType] = constructSearchParams(query);
+        const [method, params, searchType] = constructSearchParams(queryTrimmed);
         fetch(`${apiEndpoint()}/v1/${method}?${params}`)
             .then((res) => res.json())
             .then((json) => {
@@ -192,6 +204,33 @@ export default function Index() {
                 content={
                     <>
                         <Grid2 container p={2}>
+                            <Grid2 xs={12}>
+                                <Collapse in={!alertData.dismissed}>
+                                    <Box display="flex" justifyContent="center">
+                                        <Alert
+                                            severity={alertData.severity}
+                                            action={
+                                                <IconButton
+                                                    aria-label="close"
+                                                    color="inherit"
+                                                    size="small"
+                                                    onClick={() => {
+                                                        setAlertData((prevState) => ({
+                                                            ...prevState,
+                                                            dismissed: true,
+                                                        }));
+                                                    }}
+                                                >
+                                                    <CloseIcon fontSize="inherit" />
+                                                </IconButton>
+                                            }
+                                            sx={{ mb: 2 }}
+                                        >
+                                            {alertData.message}
+                                        </Alert>
+                                    </Box>
+                                </Collapse>
+                            </Grid2>
                             <Grid2 xs={12}>
                                 <TextField
                                     variant="standard"
