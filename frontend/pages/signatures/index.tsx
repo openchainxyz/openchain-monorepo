@@ -3,7 +3,7 @@ import CloseIcon from '@mui/icons-material/Close';
 
 import Box from '@mui/material/Box';
 import { Alert, AlertColor, Collapse, TextField } from '@mui/material';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -138,22 +138,39 @@ function processSearch(
     );
 }
 
+function useDebounce<T>(value: T, delay?: number): T {
+    const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedValue(value), delay || 500);
+
+        return () => {
+            clearTimeout(timer);
+        };
+    }, [value, delay]);
+
+    return debouncedValue;
+}
+
 export default function Index() {
-    const [query, setQuery] = useState('');
+    const router = useRouter();
+    const query = (router.query.query || '') as string;
+
     const [isSearching, setIsSearching] = useState(false);
-    const [searchResults, setSearchResults] = useState<React.ReactNode>(<div></div>);
-    const [alertData, setAlertData] = React.useState({
+    const [searchResults, setSearchResults] = useState<React.ReactNode | null>(null);
+    const [alertData, setAlertData] = useState({
         dismissed: true,
         severity: 'success' as AlertColor,
         message: '',
     });
 
-    const doSearch = () => {
+    const doSearch = (query: string) => {
         console.log('fuck');
         // check if the imported data is empty
         const queryTrimmed = query.trim();
         if (queryTrimmed.length === 0) {
             console.log('fuck2');
+            setSearchResults(null);
             setAlertData({
                 dismissed: false,
                 severity: 'warning',
@@ -187,6 +204,12 @@ export default function Index() {
                 });
             });
     };
+
+    // On changes to the query, we want to debounce the search to prevent spamming the API.
+    const debouncedQuery = useDebounce(query, 500);
+    useEffect(() => {
+        doSearch(debouncedQuery);
+    }, [debouncedQuery]);
 
     return (
         <>
@@ -238,10 +261,14 @@ export default function Index() {
                                     fullWidth
                                     margin="dense"
                                     value={query}
-                                    onChange={(event) => setQuery(event.target.value)}
+                                    onChange={(event) =>
+                                        router.replace({ query: { query: event.target.value } }, undefined, {
+                                            shallow: true,
+                                        })
+                                    }
                                     onKeyUp={(event) => {
                                         if (event.key === 'Enter') {
-                                            doSearch();
+                                            doSearch(query);
                                         }
                                     }}
                                     inputProps={{
@@ -254,7 +281,7 @@ export default function Index() {
                                             <Button
                                                 variant="text"
                                                 size="small"
-                                                onClick={() => doSearch()}
+                                                onClick={() => doSearch(query)}
                                                 style={{
                                                     fontFamily: 'RiformaLL',
                                                 }}
