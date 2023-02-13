@@ -17,7 +17,7 @@
         "@mui/lab": "5.0.0-alpha.119",
         "@mui/material": "^5.11.8",
         "@mui/system": "^5.11.8",
-        "@openchainxyz/abi-guesser": "^1.0.1",
+        "@openchainxyz/abi-guesser": "^1.0.2",
         "@openchainxyz/transaction-decoder": "github:openchainxyz/transaction-decoder",
         "@react-hookz/web": "^22.0.0",
         "bufferutil": "^4.0.7",

@@ -132,7 +132,7 @@ export const DecodeTree = (props: DecodeTreeProps) => {
             console.log('decoded output', data);
             setData(data);
         });
-    }, [props.traceResult, props.traceMetadata, props.provider]);
+    }, [props.traceResult, props.traceMetadata]);
 
     let children;
 

@@ -198,7 +198,7 @@ export const TraceTree = (props: TraceTreeProps) => {
 
         setExpanded(defaultExpanded);
         setStorageMetadata(newStorageMetadata);
-    }, [traceResult, traceMetadata, preimageMetadata]);
+    }, [traceResult, traceMetadata]);
 
     let expandToNode = (nodeId: string) => {
         let newExpanded = expanded.slice(0);
@@ -466,7 +466,7 @@ export const TraceTree = (props: TraceTreeProps) => {
 
     const treeItems = React.useMemo(() => {
         return recursivelyGenerateTree(traceResult.entrypoint);
-    }, [showStorageChanges, traceResult, storageMetadata, recursivelyGenerateTree]);
+    }, [showStorageChanges, traceResult, storageMetadata]);
     const l = (
         <>
             <TreeView

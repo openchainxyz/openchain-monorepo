@@ -8,7 +8,7 @@ specifiers:
   '@mui/lab': 5.0.0-alpha.119
   '@mui/material': ^5.11.8
   '@mui/system': ^5.11.8
-  '@openchainxyz/abi-guesser': ^1.0.1
+  '@openchainxyz/abi-guesser': ^1.0.2
   '@openchainxyz/transaction-decoder': github:openchainxyz/transaction-decoder
   '@react-hookz/web': ^22.0.0
   '@types/bn.js': ^5.1.1
@@ -43,7 +43,7 @@ dependencies:
   '@mui/lab': 5.0.0-alpha.119_dbnsnjploduolqnmqxqul5jjcm
   '@mui/material': 5.11.8_acl7mc3llczqccvmbrsweq6vga
   '@mui/system': 5.11.8_teoksulxetwanny5ohzazahldq
-  '@openchainxyz/abi-guesser': 1.0.1_3cxu5zja4e2r5wmvge7mdcljwq
+  '@openchainxyz/abi-guesser': 1.0.2_3cxu5zja4e2r5wmvge7mdcljwq
   '@openchainxyz/transaction-decoder': github.com/openchainxyz/transaction-decoder/4a3ad8252610d21bdd24ee369e9e13d9037b45c9_3cxu5zja4e2r5wmvge7mdcljwq
   '@react-hookz/web': 22.0.0_biqbaboplfbrettd7655fr4n2y
   bufferutil: 4.0.7
@@ -1207,8 +1207,8 @@ packages:
       fastq: 1.15.0
     dev: true
 
-  /@openchainxyz/abi-guesser/1.0.1_3cxu5zja4e2r5wmvge7mdcljwq:
-    resolution: {integrity: sha512-FJYbbjEa5+xLr9NUmu+/0BaTAutn43w2QxjQAthvNj2ZgPFR9FHsFp2Q0FlbQg15vptyGUi4x7Ut+Yy96n1Ipg==}
+  /@openchainxyz/abi-guesser/1.0.2_3cxu5zja4e2r5wmvge7mdcljwq:
+    resolution: {integrity: sha512-Qs5vdCbVa519SEz45mxm/CTmJAzqgBQuWI09iWtO0sXmcnKyeqS2nMXlRsQOD/XGtDW7+UssVTiv9ovE8tDfqQ==}
     dependencies:
       ethers: 6.0.3_3cxu5zja4e2r5wmvge7mdcljwq
     transitivePeerDependencies:

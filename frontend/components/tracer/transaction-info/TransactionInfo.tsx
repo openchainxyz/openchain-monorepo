@@ -92,7 +92,7 @@ export const TransactionInfo = (props: TransactionInfoProps) => {
         } else {
             props.estimator.stop();
         }
-    }, [transactionMetadata.result, props.estimator, props.provider, transactionMetadata.transaction]);
+    }, [transactionMetadata.result]);
 
     let transactionStatus: string;
     if (transactionMetadata.result === null) {

@@ -1,3 +1,4 @@
 signature-database-srv 0.0.9
 vyper-compiler-srv 0.0.3
-frontend 0.0.5
+frontend 0.0.9
+data-collector-srv 0.0.5
