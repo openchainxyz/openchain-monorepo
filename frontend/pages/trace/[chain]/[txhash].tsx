@@ -1,15 +1,6 @@
-import { TransactionReceipt } from '@ethersproject/abstract-provider';
-import { getNetwork } from '@ethersproject/networks';
-import { BaseProvider } from '@ethersproject/providers';
-import { Launch } from '@mui/icons-material';
-import { Box, Typography } from '@mui/material';
-import { ethers } from 'ethers';
-import { useRouter } from 'next/router';
-import * as React from 'react';
 import { doApiRequest, TraceEntry, TraceResponse } from '@components/tracer/api';
 import { ChainConfig, ChainConfigContext, defaultChainConfig, getChain } from '@components/tracer/Chains';
 import { DecodeTree } from '@components/tracer/decoder-format/DecodeTree';
-import { JsonRpcBatchProvider } from '@components/tracer/ethers/json-rpc-batch-provider';
 import { GasPriceEstimator } from '@components/tracer/gas-price-estimator/estimate';
 import { defaultLabelMetadata, LabelMetadata, LabelMetadataContext } from '@components/tracer/metadata/labels';
 import {
@@ -30,6 +21,10 @@ import { TraceTree } from '@components/tracer/trace/TraceTree';
 import { TransactionInfo } from '@components/tracer/transaction-info/TransactionInfo';
 import { Result, TraceMetadata } from '@components/tracer/types';
 import { ValueChange } from '@components/tracer/value-change/ValueChange';
+import { Box, Typography } from '@mui/material';
+import { Interface, JsonRpcProvider, Provider, TransactionReceipt } from 'ethers';
+import { useRouter } from 'next/router';
+import * as React from 'react';
 import Navbar from '../../../components/Navbar';
 
 export default function TransactionViewer() {
@@ -37,7 +32,7 @@ export default function TransactionViewer() {
     const { chain, txhash } = router.query;
 
     const [chainConfig, setChainConfig] = React.useState<ChainConfig>(defaultChainConfig());
-    const [provider, setProvider] = React.useState<BaseProvider>();
+    const [provider, setProvider] = React.useState<Provider>();
     const [estimator, setEstimator] = React.useState<GasPriceEstimator>();
 
     const [transactionMetadata, setTransactionMetadata] = React.useState<Result<TransactionMetadata>>();
@@ -76,7 +71,7 @@ export default function TransactionViewer() {
         setTraceResult(undefined);
         setTransactionMetadata(undefined);
 
-        const provider = new JsonRpcBatchProvider(chainConfig.rpcUrl, getNetwork(chainConfig.chainId));
+        const provider = new JsonRpcProvider(chainConfig.rpcUrl);
         setProvider(provider);
 
         const estimator = new GasPriceEstimator(provider);
@@ -121,26 +116,31 @@ export default function TransactionViewer() {
                         for (let [codehash, info] of Object.entries(entries)) {
                             labels[address] = labels[address] || info.label;
 
-                            metadata.abis[address][codehash] = new ethers.utils.Interface([
-                                ...Object.values(info.functions),
-                                ...Object.values(info.events),
-                                ...Object.values(info.errors).filter(
-                                    (v) =>
-                                        !(
-                                            // lmao wtf ethers
-                                            (
-                                                (v.name === 'Error' &&
-                                                    v.inputs &&
-                                                    v.inputs.length === 1 &&
-                                                    v.inputs[0].type === 'string') ||
-                                                (v.name === 'Panic' &&
-                                                    v.inputs &&
-                                                    v.inputs.length === 1 &&
-                                                    v.inputs[0].type === 'uint256')
-                                            )
-                                        ),
-                                ),
-                            ]);
+                            try {
+                                console.log(info);
+                                metadata.abis[address][codehash] = new Interface([
+                                    ...Object.values(info.functions),
+                                    ...Object.values(info.events),
+                                    ...Object.values(info.errors).filter(
+                                        (v) =>
+                                            !(
+                                                // lmao wtf ethers
+                                                (
+                                                    (v.name === 'Error' &&
+                                                        v.inputs &&
+                                                        v.inputs.length === 1 &&
+                                                        v.inputs[0].type === 'string') ||
+                                                    (v.name === 'Panic' &&
+                                                        v.inputs &&
+                                                        v.inputs.length === 1 &&
+                                                        v.inputs[0].type === 'uint256')
+                                                )
+                                            ),
+                                    ),
+                                ]);
+                            } catch (e) {
+                                console.log('failed to construct interface', e);
+                            }
                         }
                     }
 
@@ -183,7 +183,10 @@ export default function TransactionViewer() {
             provider.getBlockNumber(), // make ethers fetch this so it gets batched (getTransactionReceipt really wants to know the confirmations)
             provider.getTransaction(txhash),
             provider.getTransactionReceipt(txhash),
-        ]).then(([, transactionResult, receiptResult]) => {
+        ]).then(([number, transactionResult, receiptResult]) => {
+            if (number.status === 'rejected') {
+                return;
+            }
             if (transactionResult.status === 'rejected') {
                 console.log('an error occurred while loading the transaction!', transactionResult.reason);
 
@@ -219,18 +222,18 @@ export default function TransactionViewer() {
                     result: result,
                 });
 
-                if (receipt.confirmations > 2) {
+                if (number.value - receipt.blockNumber + 1 > 2) {
                     provider
                         .getBlock(receipt.blockHash)
                         .then((block) => {
-                            result.result!.timestamp = block.timestamp;
+                            result.result!.timestamp = block!.timestamp;
 
                             setTransactionMetadata({
                                 ok: true,
                                 result: result,
                             });
 
-                            fetchDefiLlamaPrices(setPriceMetadata, [chainConfig.coingeckoId], block.timestamp).catch(
+                            fetchDefiLlamaPrices(setPriceMetadata, [chainConfig.coingeckoId], block!.timestamp).catch(
                                 (e) => {
                                     console.log('failed to fetch price', e);
                                 },
@@ -247,7 +250,7 @@ export default function TransactionViewer() {
             } else {
                 provider
                     .waitForTransaction(txhash)
-                    .then(processReceipt)
+                    .then((r) => processReceipt(r!))
                     .catch((e) => {
                         console.log('error while waiting for receipt', e);
                     });
@@ -354,12 +357,7 @@ export default function TransactionViewer() {
             <>
                 {transactionInfoGrid ? (
                     <>
-                        <Typography variant={'h6'}>
-                            Transaction Info{' '}
-                            <a href={chainConfig.blockexplorerUrl + '/tx/' + txhash}>
-                                <Launch sx={{ verticalAlign: 'middle' }} fontSize="inherit" />
-                            </a>
-                        </Typography>
+                        <Typography variant={'h6'}>Transaction Info</Typography>
                         {transactionInfoGrid}
                     </>
                 ) : null}

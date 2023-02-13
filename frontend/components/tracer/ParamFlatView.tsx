@@ -1,5 +1,5 @@
+import { ParamType, Result } from 'ethers';
 import { TraceMetadata } from './types';
-import { ParamType, Result } from '@ethersproject/abi/lib';
 import WithSeparator from 'react-with-separator';
 import { DataRenderer } from './DataRenderer';
 import * as React from 'react';
@@ -19,7 +19,7 @@ export const ParamFlatView = (props: ParamFlatViewProps) => {
     let generateNames = props.generateNames === true;
     let nameColor = props.nameColor || '#a8a19f';
 
-    let recursivelyRenderParams = (params: ParamType[], values: Result): JSX.Element => {
+    let recursivelyRenderParams = (params: readonly ParamType[], values: Result): JSX.Element => {
         return (
             <WithSeparator separator={<>,&nbsp;</>}>
                 {params.map((param, idx) => {
@@ -32,7 +32,7 @@ export const ParamFlatView = (props: ParamFlatViewProps) => {
 
                     let rendered: JSX.Element;
                     if (param.baseType === 'tuple') {
-                        rendered = <>({recursivelyRenderParams(param.components, value)})</>;
+                        rendered = <>({recursivelyRenderParams(param.components!, value)})</>;
                     } else if (param.baseType === 'array') {
                         rendered = (
                             <>[{recursivelyRenderParams(Array(value.length).fill(param.arrayChildren), value)}]</>

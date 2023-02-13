@@ -1,7 +1,7 @@
-import { Provider } from '@ethersproject/providers';
+import { formatUnits, getCreateAddress, Provider, toUtf8String } from 'ethers';
+import { Launch } from '@mui/icons-material';
 import { Grid, Tooltip, Typography } from '@mui/material';
-import { BigNumber, ethers } from 'ethers';
-import { formatUnits, getContractAddress } from 'ethers/lib/utils';
+import { ethers } from 'ethers';
 import humanizeDuration from 'humanize-duration';
 import { DateTime } from 'luxon';
 import * as React from 'react';
@@ -92,7 +92,7 @@ export const TransactionInfo = (props: TransactionInfoProps) => {
         } else {
             props.estimator.stop();
         }
-    }, [transactionMetadata.result]);
+    }, [transactionMetadata.result, props.estimator, props.provider, transactionMetadata.transaction]);
 
     let transactionStatus: string;
     if (transactionMetadata.result === null) {
@@ -106,6 +106,14 @@ export const TransactionInfo = (props: TransactionInfoProps) => {
             transactionStatus = 'Unknown';
         }
     }
+    const txhashAttribute = (
+        <TransactionAttribute name={'Hash'}>
+            {transactionMetadata.transaction.hash}{' '}
+            <a href={chainConfig.blockexplorerUrl + '/tx/' + transactionMetadata.transaction.hash}>
+                <Launch sx={{ verticalAlign: 'middle' }} fontSize="inherit" />
+            </a>
+        </TransactionAttribute>
+    );
     const statusAttribute = <TransactionAttribute name={'Status'}>{transactionStatus}</TransactionAttribute>;
     let timestampAttribute = null;
     let blockAttribute = null;
@@ -166,7 +174,7 @@ export const TransactionInfo = (props: TransactionInfoProps) => {
         );
     }
 
-    const toAddress = transactionMetadata.transaction.to || getContractAddress(transactionMetadata.transaction);
+    const toAddress = transactionMetadata.transaction.to || getCreateAddress(transactionMetadata.transaction);
 
     const fromAttribute = (
         <TransactionAttribute name={'From'}>
@@ -180,28 +188,28 @@ export const TransactionInfo = (props: TransactionInfoProps) => {
         </TransactionAttribute>
     );
 
-    let gasLimit = transactionMetadata.transaction.gasLimit.toBigInt();
+    let gasLimit = transactionMetadata.transaction.gasLimit;
     let gasPrice = 0n;
     if (transactionMetadata.transaction.gasPrice) {
-        gasPrice = transactionMetadata.transaction.gasPrice.toBigInt();
+        gasPrice = transactionMetadata.transaction.gasPrice;
     } else {
         if (transactionMetadata.transaction.maxFeePerGas) {
-            gasPrice += transactionMetadata.transaction.maxFeePerGas.toBigInt();
+            gasPrice += transactionMetadata.transaction.maxFeePerGas;
         }
         if (transactionMetadata.transaction.maxPriorityFeePerGas) {
-            gasPrice += transactionMetadata.transaction.maxPriorityFeePerGas.toBigInt();
+            gasPrice += transactionMetadata.transaction.maxPriorityFeePerGas;
         }
     }
 
     if (transactionMetadata.result !== null) {
         // update with actual values
-        gasLimit = transactionMetadata.result.receipt.gasUsed.toBigInt();
-        if (transactionMetadata.result.receipt.effectiveGasPrice) {
-            gasPrice = transactionMetadata.result.receipt.effectiveGasPrice.toBigInt();
-        }
+        gasLimit = transactionMetadata.result.receipt.gasUsed;
+        // if (transactionMetadata.result.receipt.effectiveGasPrice) {
+        //     gasPrice = transactionMetadata.result.receipt.effectiveGasPrice.toBigInt();
+        // }
     }
 
-    const transactionValue = transactionMetadata.transaction.value.toBigInt();
+    const transactionValue = transactionMetadata.transaction.value;
     const transactionFee = gasLimit * gasPrice;
 
     let transactionValueStr = formatUnitsSmartly(transactionValue, chainConfig.nativeSymbol);
@@ -267,9 +275,9 @@ export const TransactionInfo = (props: TransactionInfoProps) => {
                 {transactionMetadata.result.receipt.gasUsed.toString()}/
                 {transactionMetadata.transaction.gasLimit.toString()}&nbsp;(
                 {(
-                    (transactionMetadata.result.receipt.gasUsed.toNumber() * 100) /
-                    transactionMetadata.transaction.gasLimit.toNumber()
-                ).toPrecision(4)}
+                    (transactionMetadata.result.receipt.gasUsed * 100n) /
+                    transactionMetadata.transaction.gasLimit
+                ).toString()}
                 %)
             </TransactionAttribute>
         );
@@ -286,7 +294,7 @@ export const TransactionInfo = (props: TransactionInfoProps) => {
             <>
                 {transactionMetadata.result != null ? (
                     <TransactionAttribute name={'Gas Price'}>
-                        {formatUnits(transactionMetadata.result.receipt.effectiveGasPrice, 'gwei')}&nbsp;gwei
+                        {formatUnits(transactionMetadata.result.receipt.gasPrice, 'gwei')}&nbsp;gwei
                     </TransactionAttribute>
                 ) : null}
                 <TransactionAttribute name={'Max Priority Fee'}>
@@ -310,7 +318,7 @@ export const TransactionInfo = (props: TransactionInfoProps) => {
     let calldataAsUtf8;
     try {
         const data = transactionMetadata.transaction.data.replace(/(00)+$/g, '');
-        const utf8Str = ethers.utils.toUtf8String(data).trim();
+        const utf8Str = toUtf8String(data).trim();
         if (utf8Str.length > 0) {
             calldataAsUtf8 = (
                 <TransactionAttributeRow>
@@ -327,6 +335,7 @@ export const TransactionInfo = (props: TransactionInfoProps) => {
         <>
             <Typography variant={'body1'} component={'div'}>
                 <TransactionAttributeGrid>
+                    <TransactionAttributeRow>{txhashAttribute}</TransactionAttributeRow>
                     <TransactionAttributeRow>
                         {statusAttribute}
                         {estimatedConfirmationAttribute}
@@ -358,7 +367,7 @@ export const TransactionInfo = (props: TransactionInfoProps) => {
                         </TransactionAttribute>
                         {transactionMetadata.result !== null ? (
                             <TransactionAttribute name={'Index'}>
-                                {transactionMetadata.result.receipt.transactionIndex}
+                                {transactionMetadata.result.receipt.index}
                             </TransactionAttribute>
                         ) : null}
                     </TransactionAttributeRow>

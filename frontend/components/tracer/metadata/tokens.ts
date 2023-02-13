@@ -1,6 +1,4 @@
-import { defaultAbiCoder, ParamType } from '@ethersproject/abi';
-import { BaseProvider } from '@ethersproject/providers';
-import { ethers } from 'ethers';
+import { AbiCoder, Provider, ParamType, id, toUtf8String } from 'ethers';
 import React from 'react';
 import { SupportedChains } from '../Chains';
 const NATIVE_TOKEN = 'native_token';
@@ -43,7 +41,7 @@ export const TokenMetadataContext = React.createContext(defaultTokenMetadata());
 
 export const fetchTokenMetadata = (
     setMetadata: React.Dispatch<React.SetStateAction<TokenMetadata>>,
-    provider: BaseProvider,
+    provider: Provider,
     tokens: Array<string>,
 ) => {
     return new Promise<void>((resolve, reject) => {
@@ -68,7 +66,7 @@ export const fetchTokenMetadata = (
                                 provider
                                     .call({
                                         to: token,
-                                        data: ethers.utils.id('decimals()').substring(0, 10),
+                                        data: id('decimals()').substring(0, 10),
                                     })
                                     .then((decimalsHex) => {
                                         const decimals = BigInt(decimalsHex);
@@ -89,16 +87,16 @@ export const fetchTokenMetadata = (
                                 provider
                                     .call({
                                         to: token,
-                                        data: ethers.utils.id('symbol()').substring(0, 10),
+                                        data: id('symbol()').substring(0, 10),
                                     })
                                     .then((symbolHex) => {
                                         let symbol;
 
                                         if (symbolHex.length === 66) {
-                                            symbol = ethers.utils.toUtf8String(symbolHex.replace(/(00)+$/g, ''));
+                                            symbol = toUtf8String(symbolHex.replace(/(00)+$/g, ''));
                                         } else {
                                             try {
-                                                let results = defaultAbiCoder.decode(
+                                                let results = AbiCoder.defaultAbiCoder().decode(
                                                     [ParamType.from('string')],
                                                     symbolHex,
                                                 );
@@ -121,8 +119,8 @@ export const fetchTokenMetadata = (
                                     .call({
                                         to: token,
                                         data:
-                                            ethers.utils.id('supportsInterface(bytes4)').substring(0, 10) +
-                                            defaultAbiCoder.encode(['bytes4'], ['0x80ac58cd']).substring(2),
+                                            id('supportsInterface(bytes4)').substring(0, 10) +
+                                            AbiCoder.defaultAbiCoder().encode(['bytes4'], ['0x80ac58cd']).substring(2),
                                     })
                                     .then((isNftHex) => {
                                         const isNft = isNftHex.length > 2 ? BigInt(isNftHex) == 1n : false;

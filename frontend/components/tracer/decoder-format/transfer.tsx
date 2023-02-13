@@ -1,5 +1,5 @@
 import { DataRenderer } from '../DataRenderer';
-import { BurnERC20Action, MintERC20Action, TransferAction } from '@samczsun/transaction-decoder/lib/sdk/actions';
+import { BurnERC20Action, MintERC20Action, TransferAction } from '@openchainxyz/transaction-decoder/lib/sdk/actions';
 import { DecodeFormatOpts, Formatter } from './types';
 
 export class TransferFormatter extends Formatter<MintERC20Action | BurnERC20Action | TransferAction> {
@@ -12,8 +12,8 @@ export class TransferFormatter extends Formatter<MintERC20Action | BurnERC20Acti
                     [opts.tokens.tokens[result.token.toLowerCase()]?.isNft ? 'id' : 'amount', 'to', 'operator'],
                     [
                         this.formatTokenAmount(opts, result.token, result.amount),
-                        <DataRenderer preferredType={'address'} data={result.to} />,
-                        <DataRenderer preferredType={'address'} data={result.operator} />,
+                        <DataRenderer key="to" preferredType={'address'} data={result.to} />,
+                        <DataRenderer key="operator" preferredType={'address'} data={result.operator} />,
                     ],
                 );
             case 'burn-erc20':
@@ -23,8 +23,8 @@ export class TransferFormatter extends Formatter<MintERC20Action | BurnERC20Acti
                     [opts.tokens.tokens[result.token.toLowerCase()]?.isNft ? 'id' : 'amount', 'from', 'operator'],
                     [
                         this.formatTokenAmount(opts, result.token, result.amount),
-                        <DataRenderer preferredType={'address'} data={result.from} />,
-                        <DataRenderer preferredType={'address'} data={result.operator} />,
+                        <DataRenderer key="from" preferredType={'address'} data={result.from} />,
+                        <DataRenderer key="operator" preferredType={'address'} data={result.operator} />,
                     ],
                 );
             case 'transfer':
@@ -34,9 +34,9 @@ export class TransferFormatter extends Formatter<MintERC20Action | BurnERC20Acti
                     [opts.tokens.tokens[result.token.toLowerCase()]?.isNft ? 'id' : 'amount', 'from', 'to', 'operator'],
                     [
                         this.formatTokenAmount(opts, result.token, result.amount),
-                        <DataRenderer preferredType={'address'} data={result.from} />,
-                        <DataRenderer preferredType={'address'} data={result.to} />,
-                        <DataRenderer preferredType={'address'} data={result.operator} />,
+                        <DataRenderer key="from" preferredType={'address'} data={result.from} />,
+                        <DataRenderer key="to" preferredType={'address'} data={result.to} />,
+                        <DataRenderer key="operator" preferredType={'address'} data={result.operator} />,
                     ],
                 );
         }

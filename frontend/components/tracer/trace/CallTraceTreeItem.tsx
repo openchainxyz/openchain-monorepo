@@ -1,13 +1,11 @@
-import { defaultAbiCoder, ParamType, Result } from '@ethersproject/abi';
+import { AbiCoder, ParamType, Result, formatEther, getBytes } from 'ethers';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { Grid } from '@mui/material';
-import { BigNumber, ethers } from 'ethers';
-import { formatEther } from 'ethers/lib/utils';
 import * as React from 'react';
 import { useContext } from 'react';
 import { TraceEntryCall, TraceEntryLog, TraceEntrySload, TraceEntrySstore, TraceResponse } from '../api';
-import { guessFragment } from '@samczsun/abi-guesser/dist/encode-guesser';
+import { guessFragment } from '@openchainxyz/abi-guesser';
 import { ChainConfigContext } from '../Chains';
 import { DataRenderer } from '../DataRenderer';
 import { EncodedABITextField } from '../EncodedABITextField';
@@ -53,9 +51,10 @@ export const CallTraceTreeItem = (props: CallTraceTreeItemProps) => {
         (() => {
             if (node.input.length > 2) {
                 try {
-                    return traceMetadata.abis[node.to][node.codehash].getFunction(
+                    const frag = traceMetadata.abis[node.to][node.codehash].getFunction(
                         node.input.substring(0, 10).toLowerCase(),
                     );
+                    if (frag) return frag;
                 } catch (e) {}
             }
 
@@ -119,7 +118,7 @@ export const CallTraceTreeItem = (props: CallTraceTreeItemProps) => {
             fragmentInputs = parsedFunctionFragment.inputs;
             functionParams = <>0x{node.input.substring(10)}</>;
             try {
-                parsedInput = defaultAbiCoder.decode(fragmentInputs, ethers.utils.arrayify(node.input).slice(4));
+                parsedInput = AbiCoder.defaultAbiCoder().decode(fragmentInputs, getBytes(node.input).slice(4));
                 parsedInput.forEach((v) => v.toString());
             } catch (err) {
                 parsedInput = null;
@@ -129,7 +128,7 @@ export const CallTraceTreeItem = (props: CallTraceTreeItemProps) => {
                 fragmentOutputs = parsedFunctionFragment.outputs;
                 if (fragmentOutputs) {
                     try {
-                        parsedOutput = defaultAbiCoder.decode(fragmentOutputs, ethers.utils.arrayify(node.output));
+                        parsedOutput = AbiCoder.defaultAbiCoder().decode(fragmentOutputs, getBytes(node.output));
                         parsedOutput.forEach((v) => v.toString());
                     } catch (err) {
                         parsedOutput = null;
@@ -147,7 +146,7 @@ export const CallTraceTreeItem = (props: CallTraceTreeItemProps) => {
             if (parsedErrorFragment) {
                 fragmentOutputs = parsedErrorFragment.inputs;
                 try {
-                    parsedOutput = defaultAbiCoder.decode(fragmentOutputs, ethers.utils.arrayify(node.output).slice(4));
+                    parsedOutput = AbiCoder.defaultAbiCoder().decode(fragmentOutputs, getBytes(node.output).slice(4));
                     parsedOutput.forEach((v) => v.toString());
                 } catch (err) {
                     parsedOutput = null;
@@ -156,9 +155,9 @@ export const CallTraceTreeItem = (props: CallTraceTreeItemProps) => {
                 if (node.output.slice(0, 10) in BuiltinErrors) {
                     fragmentOutputs = BuiltinErrors[node.output.slice(0, 10)].inputs;
                     try {
-                        parsedOutput = defaultAbiCoder.decode(
+                        parsedOutput = AbiCoder.defaultAbiCoder().decode(
                             fragmentOutputs,
-                            ethers.utils.arrayify(node.output).slice(4),
+                            getBytes(node.output).slice(4),
                         );
                         parsedOutput.forEach((v) => v.toString());
                     } catch (err) {
@@ -167,7 +166,7 @@ export const CallTraceTreeItem = (props: CallTraceTreeItemProps) => {
                 } else {
                     fragmentOutputs = [ParamType.from('string message')];
                     try {
-                        parsedOutput = defaultAbiCoder.decode(fragmentOutputs, ethers.utils.arrayify(node.output));
+                        parsedOutput = AbiCoder.defaultAbiCoder().decode(fragmentOutputs, getBytes(node.output));
                         parsedOutput.forEach((v) => v.toString());
                     } catch (err) {
                         parsedOutput = null;
@@ -185,14 +184,7 @@ export const CallTraceTreeItem = (props: CallTraceTreeItemProps) => {
         inputParamFlatView = (
             <ParamFlatView traceMetadata={traceMetadata} params={fragmentInputs} values={parsedInput} />
         );
-        inputParamTreeView = (
-            <ParamTreeView
-                traceMetadata={traceMetadata}
-                path={node.path + '.input'}
-                params={fragmentInputs}
-                values={parsedInput}
-            />
-        );
+        inputParamTreeView = <ParamTreeView path={node.path + '.input'} params={fragmentInputs} values={parsedInput} />;
     } else {
         inputParamFlatView = functionParams;
     }
@@ -201,12 +193,7 @@ export const CallTraceTreeItem = (props: CallTraceTreeItemProps) => {
             <ParamFlatView traceMetadata={traceMetadata} params={fragmentOutputs} values={parsedOutput} />
         );
         outputParamTreeView = (
-            <ParamTreeView
-                traceMetadata={traceMetadata}
-                path={node.path + '.output'}
-                params={fragmentOutputs}
-                values={parsedOutput}
-            />
+            <ParamTreeView path={node.path + '.output'} params={fragmentOutputs} values={parsedOutput} />
         );
     } else {
         outputParamFlatView = functionReturns;
@@ -321,8 +308,8 @@ export const CallTraceTreeItem = (props: CallTraceTreeItemProps) => {
     }
     let valueNode;
 
-    let value = BigNumber.from(node.value);
-    if (value.gt(0)) {
+    let value = node.value;
+    if (value > 0n) {
         valueNode = <span style={{ color: '#c94922' }}>{`[${formatEther(value)} ${chainConfig.nativeSymbol}]`}</span>;
     }
 

@@ -1,6 +1,6 @@
 import { TraceEntryCallable, TraceMetadata } from '../types';
 import * as React from 'react';
-import { ParamType } from '@ethersproject/abi';
+import { ParamType } from 'ethers';
 import { ParamFlatView } from '../ParamFlatView';
 import { DataRenderer } from '../DataRenderer';
 import { Grid, List, ListItem } from '@mui/material';
@@ -137,18 +137,12 @@ export const LogTraceTreeItem = (props: LogTraceTreeItemProps) => {
                 <Grid item>
                     {parsedEventFragment && parsedEvent ? (
                         <ParamTreeView
-                            traceMetadata={traceMetadata}
                             path={node.path + '.input'}
                             params={parsedEventFragment.inputs}
                             values={parsedEvent}
                         />
                     ) : (
-                        <ParamTreeView
-                            traceMetadata={traceMetadata}
-                            path={node.path + '.input'}
-                            params={fakeParams}
-                            values={fakeValues}
-                        />
+                        <ParamTreeView path={node.path + '.input'} params={fakeParams} values={fakeValues} />
                     )}
                 </Grid>
             </Grid>

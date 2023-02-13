@@ -1,7 +1,6 @@
 import React from 'react';
-import { BigNumber, BigNumberish, ethers } from 'ethers';
+import { BigNumberish, formatUnits, ParamType } from 'ethers';
 import { TraceMetadata } from './types';
-import { formatUnits, ParamType } from 'ethers/lib/utils';
 import { createTheme } from '@mui/material';
 // noinspection ES6UnusedImports
 import {} from '@mui/lab/themeAugmentation';
@@ -58,8 +57,8 @@ export const TreeItemContentSpan = (props: TreeItemContentProps) => {
     );
 };
 
-export const toHash = (value: ethers.BigNumberish): string => {
-    return '0x' + BigNumber.from(value).toHexString().substring(2).padStart(64, '0');
+export const toHash = (value: bigint): string => {
+    return '0x' + value.toString(16).padStart(64, '0');
 };
 
 export const chunkString = (str: string, len: number): string[] => {
@@ -98,18 +97,17 @@ export const findAffectedContract = (metadata: TraceMetadata, node: TraceEntry):
     throw new Error("strange, didn't find parent node");
 };
 
-export const formatUnitsSmartly = (value: BigNumberish, nativeUnit?: string): string => {
+export const formatUnitsSmartly = (value: bigint, nativeUnit?: string): string => {
     nativeUnit = (nativeUnit || 'eth').toUpperCase();
 
-    value = BigNumber.from(value);
-    if (value.isZero()) {
+    if (value === 0n) {
         return `0 ${nativeUnit}`;
     }
 
     let chosenUnit;
-    if (value.gte(BigNumber.from(100000000000000))) {
+    if (value >= 100000000000000n) {
         chosenUnit = 'ether';
-    } else if (value.gte(BigNumber.from(100000))) {
+    } else if (value >= 100000n) {
         chosenUnit = 'gwei';
     } else {
         chosenUnit = 'wei';
@@ -124,8 +122,7 @@ export const formatUnitsSmartly = (value: BigNumberish, nativeUnit?: string): st
     return `${formattedValue} ${chosenUnit}`;
 };
 
-export const formatUsd = (val: BigNumberish): string => {
-    val = BigNumber.from(val);
+export const formatUsd = (val: bigint): string => {
     let formatted = formatUnits(val, 22);
     let [left, right] = formatted.split('.');
 

@@ -1,11 +1,8 @@
-import { Interface } from '@ethersproject/abi';
-import { Log } from '@ethersproject/abstract-provider';
-import { BaseProvider } from '@ethersproject/providers';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import TreeView from '@mui/lab/TreeView';
+import { getAddress, getBytes, Interface, Log, Provider } from 'ethers';
 import * as ethers from 'ethers';
-import { BigNumber } from 'ethers';
 import * as React from 'react';
 import { useContext } from 'react';
 import { ChainConfigContext } from '../Chains';
@@ -17,21 +14,21 @@ import { TraceTreeItem } from '../trace/TraceTreeItem';
 import { TraceMetadata } from '../types';
 import { TraceEntryCall, TraceEntryLog, TraceResponse } from '../api';
 import { format } from './formatter';
-import { defaultDecoders } from '@samczsun/transaction-decoder/lib/decoders';
-import { TransferDecoder } from '@samczsun/transaction-decoder/lib/decoders/fallback';
-import { DecoderManager } from '@samczsun/transaction-decoder/lib/sdk/decoder';
-import { getNodeId } from '@samczsun/transaction-decoder/lib/sdk/utils';
+import { defaultDecoders } from '@openchainxyz/transaction-decoder/lib/decoders';
+import { TransferDecoder } from '@openchainxyz/transaction-decoder/lib/decoders/fallback';
+import { DecoderManager } from '@openchainxyz/transaction-decoder/lib/sdk/decoder';
+import { getNodeId } from '@openchainxyz/transaction-decoder/lib/sdk/utils';
 import {
     DecoderOutput,
     MetadataRequest,
     ProviderDecoderChainAccess,
     DecoderInputTraceExt,
-} from '@samczsun/transaction-decoder/lib/sdk/types';
+} from '@openchainxyz/transaction-decoder/lib/sdk/types';
 
 const decoderManager = new DecoderManager(defaultDecoders, new TransferDecoder());
 
 export type DecodeTreeProps = {
-    provider: BaseProvider;
+    provider: Provider;
     traceResult: TraceResponse;
     traceMetadata: TraceMetadata;
 };
@@ -57,7 +54,7 @@ export const DecodeTree = (props: DecodeTreeProps) => {
                     const [affected] = findAffectedContract(props.traceMetadata, logNode);
                     indexToPath[logIndex] = logNode.path;
                     const log: Log = {
-                        address: ethers.utils.getAddress(affected.to),
+                        address: getAddress(affected.to),
                         blockHash: '',
                         blockNumber: 0,
                         data: logNode.data,
@@ -102,15 +99,15 @@ export const DecodeTree = (props: DecodeTreeProps) => {
             return {
                 id: node.path,
                 type: node.variant,
-                from: ethers.utils.getAddress(node.from),
-                to: ethers.utils.getAddress(node.to),
-                value: BigNumber.from(node.value),
-                calldata: ethers.utils.arrayify(node.input),
+                from: ethers.getAddress(node.from),
+                to: ethers.getAddress(node.to),
+                value: node.value,
+                calldata: getBytes(node.input),
 
                 failed: node.status !== 1,
                 logs: logs,
 
-                returndata: ethers.utils.arrayify(node.output),
+                returndata: getBytes(node.output),
                 children: children,
 
                 childOrder: node.children
@@ -135,7 +132,7 @@ export const DecodeTree = (props: DecodeTreeProps) => {
             console.log('decoded output', data);
             setData(data);
         });
-    }, [props.traceResult, props.traceMetadata]);
+    }, [props.traceResult, props.traceMetadata, props.provider]);
 
     let children;
 

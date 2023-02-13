@@ -1,7 +1,6 @@
-import { BlockWithTransactions, TransactionReceipt, TransactionResponse } from '@ethersproject/abstract-provider';
-import { JsonRpcProvider } from '@ethersproject/providers';
-
 // https://stackoverflow.com/questions/20811131/javascript-remove-outlier-from-an-array
+import { Block, JsonRpcProvider, TransactionReceipt, TransactionResponse } from 'ethers';
+
 function filterOutliers(someArray: number[]) {
     // Copy the values, rather than operating on references to existing values
     var values = someArray.concat();
@@ -72,21 +71,21 @@ export class GasPriceEstimator {
         this.listener = this.onNewBlock.bind(this);
     }
 
-    private processBlock(block: BlockWithTransactions) {
+    private processBlock(block: Block) {
         if (block.baseFeePerGas) {
             if (!this.lastBaseFee || block.number > this.lastBaseFee[0]) {
-                this.lastBaseFee = [block.number, block.baseFeePerGas?.toNumber()];
+                this.lastBaseFee = [block.number, Number(block.baseFeePerGas!)];
             }
         }
 
         if (block.transactions.length === 0) return;
 
-        const transactionsByHash: Record<string, TransactionResponse> = block.transactions.reduce(
+        const transactionsByHash: Record<string, TransactionResponse> = block.prefetchedTransactions.reduce(
             (v, tx) => ({ ...v, [tx.hash]: tx }),
             {},
         );
 
-        Promise.allSettled(block.transactions.map((tx) => this.provider.getTransactionReceipt(tx.hash)))
+        Promise.allSettled(block.prefetchedTransactions.map((tx) => this.provider.getTransactionReceipt(tx.hash)))
             .then((results) =>
                 results
                     .filter(
@@ -97,14 +96,12 @@ export class GasPriceEstimator {
             )
             .then((receipts) => {
                 const prices = receipts
-                    .map((receipt) =>
-                        (receipt.effectiveGasPrice || transactionsByHash[receipt.transactionHash].gasPrice!).toNumber(),
-                    )
+                    .map((receipt) => Number(receipt.gasPrice || transactionsByHash[receipt.hash].gasPrice!))
                     .sort((a, b) => b - a);
 
                 this.analysis.push({
                     blockNumber: block.number,
-                    baseFee: block.baseFeePerGas?.toBigInt(),
+                    baseFee: block.baseFeePerGas!,
                     acceptedGasPrices: prices,
                 });
 
@@ -124,13 +121,13 @@ export class GasPriceEstimator {
         if (newestFeeInfo.baseFee) {
             if (transaction.maxPriorityFeePerGas && transaction.maxFeePerGas) {
                 maxGasPrice = Math.min(
-                    transaction.maxFeePerGas.toNumber(),
-                    newestFeeInfo.baseFee + transaction.maxPriorityFeePerGas.toNumber(),
+                    Number(transaction.maxFeePerGas),
+                    newestFeeInfo.baseFee + Number(transaction.maxPriorityFeePerGas),
                 );
             }
         }
         if (!maxGasPrice && transaction.gasPrice) {
-            maxGasPrice = transaction.gasPrice.toNumber();
+            maxGasPrice = Number(transaction.gasPrice);
         }
 
         if (newestFeeInfo.baseFee && maxGasPrice < newestFeeInfo.baseFee) {
@@ -219,8 +216,8 @@ export class GasPriceEstimator {
             this.fetchFeeHistory();
         } else {
             this.provider
-                .getBlockWithTransactions(blockNumber)
-                .then((result) => this.handleBlocks([result]))
+                .getBlock(blockNumber)
+                .then((result) => this.handleBlocks([result!]))
                 .catch(() => {});
         }
     }
@@ -249,24 +246,26 @@ export class GasPriceEstimator {
     private async fetchBlockHistory(): Promise<void> {
         const blockNumber = await this.provider.getBlockNumber();
 
-        const promises: Promise<BlockWithTransactions>[] = [];
+        const promises: Promise<Block | null>[] = [];
         for (let i = 0; i < 16; i++) {
-            promises.push(this.provider.getBlockWithTransactions(blockNumber - i));
+            promises.push(this.provider.getBlock(blockNumber - i, true));
         }
 
         const promiseResults = await Promise.allSettled(promises);
 
         const blocks = promiseResults
-            .filter((result): result is PromiseFulfilledResult<BlockWithTransactions> => result.status === 'fulfilled')
+            .filter((result): result is PromiseFulfilledResult<Block> => result.status === 'fulfilled')
             .map((result) => result.value);
 
         this.handleBlocks(blocks);
     }
 
-    private async handleBlocks(blocks: BlockWithTransactions[]) {
-        const receiptPromises: Promise<TransactionReceipt>[][] = [];
+    private async handleBlocks(blocks: Block[]) {
+        const receiptPromises: Promise<TransactionReceipt | null>[][] = [];
         for (const block of blocks) {
-            receiptPromises.push(block.transactions.map((tx) => this.provider.getTransactionReceipt(tx.hash)));
+            receiptPromises.push(
+                block.prefetchedTransactions.map((tx) => this.provider.getTransactionReceipt(tx.hash)),
+            );
         }
 
         const feeInfos: FeeInfo[] = [];
@@ -284,20 +283,20 @@ export class GasPriceEstimator {
         this.processFeeInfos(feeInfos, false);
     }
 
-    private blockHistoryToFeeInfo(block: BlockWithTransactions, receipts: TransactionReceipt[]): FeeInfo {
-        const transactionsByHash: Record<string, TransactionResponse> = block.transactions.reduce(
+    private blockHistoryToFeeInfo(block: Block, receipts: TransactionReceipt[]): FeeInfo {
+        const transactionsByHash: Record<string, TransactionResponse> = block.prefetchedTransactions.reduce(
             (v, tx) => ({ ...v, [tx.hash]: tx }),
             {},
         );
 
         const getGasPrice = (receipt: TransactionReceipt): number => {
-            if (receipt.effectiveGasPrice) {
-                return receipt.effectiveGasPrice.toNumber();
+            if (receipt.gasPrice) {
+                return Number(receipt.gasPrice);
             }
 
-            const gasPrice = transactionsByHash[receipt.transactionHash].gasPrice;
+            const gasPrice = transactionsByHash[receipt.hash].gasPrice;
             if (gasPrice) {
-                return gasPrice.toNumber();
+                return Number(gasPrice);
             }
 
             return 0;
@@ -319,8 +318,8 @@ export class GasPriceEstimator {
 
         return {
             blockNumber: block.number,
-            baseFee: block.baseFeePerGas?.toNumber(),
-            gasUsedRatio: block.gasUsed.toNumber() / block.gasLimit.toNumber(),
+            baseFee: Number(block.baseFeePerGas!),
+            gasUsedRatio: Number(block.gasUsed) / Number(block.gasLimit),
             rewards: percentiles.map((percentile) => getPercentile(effectiveGasPrices, percentile)),
         };
     }

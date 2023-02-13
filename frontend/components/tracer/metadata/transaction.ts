@@ -1,4 +1,4 @@
-import { TransactionReceipt, TransactionResponse } from '@ethersproject/abstract-provider';
+import { TransactionReceipt, TransactionResponse } from 'ethers';
 import React from 'react';
 
 export type MinedTransaction = {

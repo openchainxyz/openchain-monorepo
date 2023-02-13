@@ -1,5 +1,4 @@
-import { FunctionFragment } from '@ethersproject/abi/lib';
-import { BigNumber, ethers } from 'ethers';
+import { FunctionFragment, getAddress } from 'ethers';
 
 type Precompile = {
     name: string;
@@ -20,7 +19,7 @@ export const precompiles: Record<string, Precompile> = {
 
             return [
                 '0x' + data.substring(0, 64),
-                BigNumber.from('0x' + data.substring(64, 64 * 2)),
+                BigInt('0x' + data.substring(64, 64 * 2)),
                 '0x' + data.substring(64 * 2, 64 * 3),
                 '0x' + data.substring(64 * 3, 64 * 4),
             ];
@@ -28,7 +27,7 @@ export const precompiles: Record<string, Precompile> = {
         parseOutput: (data: string) => {
             data = data.substring(2);
             if (data.length < 12 * 2) return [];
-            return [ethers.utils.getAddress(data.substring(12 * 2))];
+            return [getAddress(data.substring(12 * 2))];
         },
     },
     '0x0000000000000000000000000000000000000002': {
@@ -57,9 +56,9 @@ export const precompiles: Record<string, Precompile> = {
         parseInput: (data: string) => {
             data = data.substring(2);
 
-            let baseLen = BigNumber.from('0x' + data.substring(0, 64)).toNumber();
-            let expLen = BigNumber.from('0x' + data.substring(64, 64 * 2)).toNumber();
-            let modLen = BigNumber.from('0x' + data.substring(64 * 2, 64 * 3)).toNumber();
+            let baseLen = parseInt('0x' + data.substring(0, 64));
+            let expLen = parseInt('0x' + data.substring(64, 64 * 2));
+            let modLen = parseInt('0x' + data.substring(64 * 2, 64 * 3));
             let base = '0x' + data.substring(0, baseLen * 2);
             let exp = '0x' + data.substring(baseLen * 2, baseLen * 2 + expLen * 2);
             let mod = '0x' + data.substring(baseLen * 2 + expLen * 2, baseLen * 2 + expLen * 2 + modLen * 2);
@@ -129,7 +128,7 @@ export const precompiles: Record<string, Precompile> = {
         },
         parseOutput: (data: string) => {
             data = data.substring(2);
-            return [!BigNumber.from('0x' + data).isZero()];
+            return [parseInt('0x' + data) !== 0];
         },
     },
     '0x0000000000000000000000000000000000000009': {
@@ -140,7 +139,7 @@ export const precompiles: Record<string, Precompile> = {
         parseInput: (data: string) => {
             data = data.substring(2);
 
-            let rounds = BigNumber.from(data.substring(0, 8));
+            let rounds = parseInt('0x' + data.substring(0, 8));
             let h = [];
             for (let i = 0; i < 8; i++) {
                 h.push(data.substring(8 + i * 16, 8 + (i + 1) * 16));
@@ -151,7 +150,7 @@ export const precompiles: Record<string, Precompile> = {
             }
             let t1 = data.substring(392, 392 + 16);
             let t2 = data.substring(392 + 16, 392 + 16 * 2);
-            let f = !BigNumber.from('0x' + data.substring(424)).isZero();
+            let f = parseInt('0x' + data.substring(424)) != 0;
 
             return [rounds, h, m, t1, t2, f];
         },

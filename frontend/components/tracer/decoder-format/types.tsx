@@ -1,5 +1,5 @@
 import Tooltip from '@mui/material/Tooltip';
-import { NATIVE_TOKEN } from '@samczsun/transaction-decoder/lib/sdk/actions';
+import { NATIVE_TOKEN } from '@openchainxyz/transaction-decoder/lib/sdk/actions';
 import { BigNumber, BigNumberish, ethers } from 'ethers';
 import React from 'react';
 import WithSeparator from 'react-with-separator';

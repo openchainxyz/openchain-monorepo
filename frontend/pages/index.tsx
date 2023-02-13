@@ -26,11 +26,17 @@ const services: Service[] = [
         description:
             'Want to dig deep into a EVM-compatible transaction? This easy-to-use transaction tracer is for you.',
     },
+    {
+        icon: '/abi-tools.png',
+        name: 'ABI Tools',
+        path: '/tools/abi',
+        description: 'Some handy tools for encoding/decoding ABI data',
+    },
 ];
 export default function Home() {
     const serviceBoxes = services.map((service, idx) => {
         return (
-            <Grid2 display={'flex'} justifyContent="center" alignItems="center" key={idx} xs={4}>
+            <Grid2 display={'flex'} justifyContent="center" alignItems="center" key={idx} xs={6}>
                 <Grid2 container direction={'column'}>
                     <Link href={service.path}>
                         <Grid2 display="flex" p={2} gap={2} justifyContent="center" alignItems="center">

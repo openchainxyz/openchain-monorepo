@@ -1,7 +1,7 @@
 import Tooltip from '@mui/material/Tooltip';
 import humanizeDuration from 'humanize-duration';
 import { DateTime } from 'luxon';
-import { ENSRegisterAction, NATIVE_TOKEN } from '@samczsun/transaction-decoder/lib/sdk/actions';
+import { ENSRegisterAction, NATIVE_TOKEN } from '@openchainxyz/transaction-decoder/lib/sdk/actions';
 import { DecodeFormatOpts, Formatter } from './types';
 
 export class ENSFormatter extends Formatter<ENSRegisterAction> {
@@ -10,7 +10,7 @@ export class ENSFormatter extends Formatter<ENSRegisterAction> {
         const vals = [
             result.name,
             this.formatAddress(result.owner),
-            <Tooltip title={humanizeDuration(result.duration * 1000)}>
+            <Tooltip title={humanizeDuration(result.duration * 1000)} key={'tooltip'}>
                 <span>
                     {DateTime.fromSeconds(opts.timestamp + result.duration).toFormat('yyyy-MM-dd hh:mm:ss ZZZZ')}
                 </span>

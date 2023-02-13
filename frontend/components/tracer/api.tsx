@@ -1,4 +1,4 @@
-import { JsonFragment } from '@ethersproject/abi';
+import { JsonFragment } from 'ethers';
 
 export type AddressInfo = {
     label: string;

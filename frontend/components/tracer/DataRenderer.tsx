@@ -1,7 +1,6 @@
-import { ParamType } from '@ethersproject/abi/lib';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { styled, Tooltip, tooltipClasses, TooltipProps } from '@mui/material';
-import { BigNumber, ethers } from 'ethers';
+import { AbiCoder, getAddress, keccak256, ParamType, toUtf8String } from 'ethers';
 import { useContext } from 'react';
 import { ChainConfig, ChainConfigContext } from './Chains';
 import { LabelMetadataContext } from './metadata/labels';
@@ -14,7 +13,7 @@ const stringifyValue = (paramType: ParamType, value: any): string => {
     }
 
     if (paramType.baseType === 'address') {
-        return ethers.utils.getAddress(value.toString());
+        return getAddress(value.toString());
     }
 
     return value.toString();
@@ -30,7 +29,7 @@ let formatValueWithParamType = (
 ): JSX.Element => {
     if (paramType.baseType === 'address') {
         let address = value;
-        let label = address;
+        let label: React.ReactNode = address;
         if (labels && labels[address.toLowerCase()]) {
             label = `[${labels[address.toLowerCase()]}]`;
         }
@@ -82,7 +81,7 @@ export const DataRenderer = (props: DataRendererProps) => {
     const labelMetadata = useContext(LabelMetadataContext);
     const preimageMetadata = useContext(PreimageMetadataContext);
 
-    const abiCoder = ethers.utils.defaultAbiCoder;
+    const abiCoder = AbiCoder.defaultAbiCoder();
 
     let preferredType = props.preferredType || 'bytes32';
     let decodedData = props.decodedData;
@@ -97,15 +96,15 @@ export const DataRenderer = (props: DataRendererProps) => {
     }
 
     if (preferredType === 'stringHeader' && data) {
-        if (BigNumber.from(data).isZero()) {
+        if (BigInt(data) === 0n) {
             preferredType = 'uint256';
-            decodedData = BigNumber.from(0);
+            decodedData = 0n;
             suffix = <>&nbsp;(length)</>;
         } else {
             let lowestBit = parseInt(data.substring(data.length - 2)) & 0x01;
             if (lowestBit) {
                 preferredType = 'uint256';
-                decodedData = BigNumber.from(data).sub(BigNumber.from(1));
+                decodedData = BigInt(data) - 1n;
                 suffix = <>&nbsp;(length)</>;
             } else {
                 preferredType = 'ascii';
@@ -116,7 +115,7 @@ export const DataRenderer = (props: DataRendererProps) => {
 
     if (preferredType === 'ascii' && data) {
         data = data.replace(/(00)+$/g, '');
-        return <>&apos;{ethers.utils.toUtf8String(data)}&apos;</>;
+        return <>&apos;{toUtf8String(data)}&apos;</>;
     }
 
     let paramType = ParamType.from(preferredType);
@@ -136,7 +135,7 @@ export const DataRenderer = (props: DataRendererProps) => {
         if ((paramType.type === 'bytes32' || paramType.indexed) && preimageMetadata.preimages[want] !== undefined) {
             decodedData = preimageMetadata.preimages[want];
             hasPreimage = true;
-            wasIndexed = paramType.type !== 'bytes32' && paramType.indexed;
+            wasIndexed = paramType.type !== 'bytes32' && !!paramType.indexed;
             paramType = ParamType.from('bytes');
         }
 
@@ -217,7 +216,7 @@ export const DataRenderer = (props: DataRendererProps) => {
             );
         } else if (paramType.baseType === 'bytes' && hasPreimage && !wasIndexed) {
             rendered = (
-                <NoMaxWidthTooltip arrow placement={'top'} title={<span>{ethers.utils.keccak256(decodedData)}</span>}>
+                <NoMaxWidthTooltip arrow placement={'top'} title={<span>{keccak256(decodedData)}</span>}>
                     <span>keccak256({rendered})</span>
                 </NoMaxWidthTooltip>
             );

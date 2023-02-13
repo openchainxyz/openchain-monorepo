@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ConstructorFragment, ErrorFragment, EventFragment, Fragment, FunctionFragment } from '@ethersproject/abi';
+import { ConstructorFragment, ErrorFragment, EventFragment, Fragment, FunctionFragment } from 'ethers';
 
 const useFragmentInternal = <S extends Fragment>(
     initialFragment: S | null,

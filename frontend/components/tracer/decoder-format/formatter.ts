@@ -1,4 +1,4 @@
-import { Action } from '@samczsun/transaction-decoder/lib/sdk/actions';
+import { Action } from '@openchainxyz/transaction-decoder/lib/sdk/actions';
 import { ENSFormatter } from './ens';
 import { SwapFormatter } from './swap';
 import { TransferFormatter } from './transfer';

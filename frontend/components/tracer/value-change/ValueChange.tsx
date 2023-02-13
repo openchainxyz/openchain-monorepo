@@ -1,13 +1,12 @@
-import { Box, Collapse, Table, TableBody, TableCell, TableHead, TableRow, TableSortLabel } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import { TraceMetadata } from '../types';
+import { Box, Collapse, Table, TableBody, TableCell, TableHead, TableRow, TableSortLabel } from '@mui/material';
+import { formatUnits, Provider } from 'ethers';
 import React, { useContext } from 'react';
-import { SpanIconButton } from '../SpanIconButton';
-import { BigNumber, ethers } from 'ethers';
-import { findAffectedContract, formatUsd } from '../helpers';
-import { DataRenderer } from '../DataRenderer';
+import { TraceEntryCall, TraceEntryLog, TraceResponse } from '../api';
 import { ChainConfig, ChainConfigContext } from '../Chains';
+import { DataRenderer } from '../DataRenderer';
+import { findAffectedContract, formatUsd } from '../helpers';
 import {
     fetchDefiLlamaPrices,
     getPriceOfToken,
@@ -16,9 +15,9 @@ import {
     toDefiLlamaId,
 } from '../metadata/prices';
 import { fetchTokenMetadata, TokenMetadata, TokenMetadataContext } from '../metadata/tokens';
-import { TraceEntryCall, TraceEntryLog, TraceResponse } from '../api';
-import { BaseProvider } from '@ethersproject/providers';
 import { TransactionMetadataContext } from '../metadata/transaction';
+import { SpanIconButton } from '../SpanIconButton';
+import { TraceMetadata } from '../types';
 
 const NATIVE_TOKEN = 'native_token';
 
@@ -31,7 +30,7 @@ type AddressValueInfo = {
 export type ValueChangeProps = {
     traceResult: TraceResponse;
     traceMetadata: TraceMetadata;
-    provider: BaseProvider;
+    provider: Provider;
 };
 
 type RowProps = {
@@ -78,7 +77,7 @@ function Row(props: RowProps) {
 
             let tokenInfo = tokenMetadata.tokens[tokenAddress];
             if (tokenInfo !== undefined && tokenInfo.decimals !== undefined) {
-                amountFormatted = ethers.utils.formatUnits(valueInfo.changePerToken[token], tokenInfo.decimals);
+                amountFormatted = formatUnits(valueInfo.changePerToken[token], tokenInfo.decimals);
             }
             if (priceMetadata.status[priceId] === 'fetched') {
                 tokenPriceRendered = formatUsd(
@@ -174,7 +173,7 @@ const computeBalanceChanges = (
         // skip failed calls because their events don't matter
         if (node.status === 0) return;
 
-        const value = BigNumber.from(node.value).toBigInt();
+        const value = BigInt(node.value);
         if (value != 0n) {
             addChange(node.from, NATIVE_TOKEN, -value);
             addChange(node.to, NATIVE_TOKEN, value);
@@ -193,7 +192,7 @@ const computeBalanceChanges = (
                             data: traceLog.data,
                         });
 
-                        const value = (parsedEvent.args[2] as BigNumber).toBigInt();
+                        const value = parsedEvent.args[2] as bigint;
                         addChange(parsedEvent.args[0] as string, parentNode.to, -value);
                         addChange(parsedEvent.args[1] as string, parentNode.to, value);
                     } catch (e) {
@@ -210,7 +209,7 @@ const computeBalanceChanges = (
                             data: traceLog.data,
                         });
 
-                        const value = (parsedEvent.args[1] as BigNumber).toBigInt();
+                        const value = parsedEvent.args[1] as bigint;
                         addChange(parsedEvent.args[0] as string, parentNode.to, -value);
                     } catch (e) {
                         console.error('failed to process value change', e);
@@ -273,7 +272,7 @@ export const ValueChange = (props: ValueChangeProps) => {
         fetchDefiLlamaPrices(
             priceMetadata.updater,
             Array.from(allTokens).map((token) => {
-                const tokenAddress = token === NATIVE_TOKEN ? ethers.constants.AddressZero : token;
+                const tokenAddress = token === NATIVE_TOKEN ? '0x0000000000000000000000000000000000000000' : token;
                 return `${chainConfig.defillamaPrefix}:${tokenAddress}`;
             }),
             transactionMetadata.result.timestamp,

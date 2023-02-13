@@ -1,4 +1,4 @@
-import { ethers } from 'ethers';
+import { Interface } from 'ethers';
 import { TraceEntry, TraceEntryCall } from './api';
 
 export type TransactionTrace = {
@@ -10,7 +10,7 @@ export type TransactionTrace = {
 
 export type TraceMetadata = {
     // map of address => codehash => abi
-    abis: Record<string, Record<string, ethers.utils.Interface>>;
+    abis: Record<string, Record<string, Interface>>;
 
     nodesByPath: Record<string, TraceEntry>;
 };

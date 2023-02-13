@@ -1,20 +1,10 @@
-import { SlotInfo, StorageMetadata, TraceMetadata } from '../types';
-import { findAffectedContract, toHash } from '../helpers';
-import { ParamType } from '@ethersproject/abi';
-import { DataRenderer } from '../DataRenderer';
-import { CallTraceTreeItem } from './CallTraceTreeItem';
-import { SloadTraceTreeItem } from './SloadTraceTreeItem';
-import { SstoreTraceTreeItem } from './SstoreTraceTreeItem';
-import { LogTraceTreeItem } from './LogTraceTreeItem';
-import TreeView from '@mui/lab/TreeView';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import * as React from 'react';
-import { knownSlots } from '../knownSlots';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import TreeView from '@mui/lab/TreeView';
 import BN from 'bn.js';
-import { ethers } from 'ethers';
+import { keccak256, ParamType } from 'ethers';
+import * as React from 'react';
 import {
-    apiEndpoint,
     doApiRequest,
     StorageResponse,
     TraceEntry,
@@ -23,7 +13,15 @@ import {
     TraceEntrySstore,
     TraceResponse,
 } from '../api';
+import { DataRenderer } from '../DataRenderer';
+import { findAffectedContract, toHash } from '../helpers';
+import { knownSlots } from '../knownSlots';
 import { PreimageMetadataContext } from '../metadata/preimages';
+import { SlotInfo, StorageMetadata, TraceMetadata } from '../types';
+import { CallTraceTreeItem } from './CallTraceTreeItem';
+import { LogTraceTreeItem } from './LogTraceTreeItem';
+import { SloadTraceTreeItem } from './SloadTraceTreeItem';
+import { SstoreTraceTreeItem } from './SstoreTraceTreeItem';
 
 type TraceTreeProps = {
     traceResult: TraceResponse;
@@ -96,7 +94,7 @@ export const TraceTree = (props: TraceTreeProps) => {
         // this is because solidity inlines the offset at which a dynamic array will be placed
         // so we don't know what it is from the trace
         allStorageOps.forEach((node) => {
-            preimages[ethers.utils.keccak256(node.slot)] = node.slot;
+            preimages[keccak256(node.slot)] = node.slot;
         });
 
         preimageMetadata.updater({
@@ -200,7 +198,7 @@ export const TraceTree = (props: TraceTreeProps) => {
 
         setExpanded(defaultExpanded);
         setStorageMetadata(newStorageMetadata);
-    }, [traceResult, traceMetadata]);
+    }, [traceResult, traceMetadata, preimageMetadata]);
 
     let expandToNode = (nodeId: string) => {
         let newExpanded = expanded.slice(0);
@@ -468,7 +466,7 @@ export const TraceTree = (props: TraceTreeProps) => {
 
     const treeItems = React.useMemo(() => {
         return recursivelyGenerateTree(traceResult.entrypoint);
-    }, [showStorageChanges, traceResult, storageMetadata]);
+    }, [showStorageChanges, traceResult, storageMetadata, recursivelyGenerateTree]);
     const l = (
         <>
             <TreeView

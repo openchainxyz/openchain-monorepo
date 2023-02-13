@@ -1,4 +1,4 @@
-import { UnwrapNativeTokenAction, WrapNativeTokenAction } from '@samczsun/transaction-decoder/lib/sdk/actions';
+import { UnwrapNativeTokenAction, WrapNativeTokenAction } from '@openchainxyz/transaction-decoder/lib/sdk/actions';
 import { DataRenderer } from '../DataRenderer';
 import { DecodeFormatOpts, Formatter } from './types';
 
@@ -11,7 +11,7 @@ export class WrappedNativeTokenFormatter extends Formatter<WrapNativeTokenAction
                 [opts.tokens.tokens[result.token.toLowerCase()]?.isNft ? 'id' : 'amount', 'operator'],
                 [
                     this.formatTokenAmount(opts, result.token, result.amount),
-                    <DataRenderer preferredType={'address'} data={result.operator} />,
+                    <DataRenderer key="operator" preferredType={'address'} data={result.operator} />,
                 ],
             );
         } else {
@@ -21,7 +21,7 @@ export class WrappedNativeTokenFormatter extends Formatter<WrapNativeTokenAction
                 [opts.tokens.tokens[result.token.toLowerCase()]?.isNft ? 'id' : 'amount', 'operator'],
                 [
                     this.formatTokenAmount(opts, result.token, result.amount),
-                    <DataRenderer preferredType={'address'} data={result.operator} />,
+                    <DataRenderer key="operator" preferredType={'address'} data={result.operator} />,
                 ],
             );
         }
