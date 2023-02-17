@@ -154,8 +154,8 @@ function useDebounce<T>(value: T, delay?: number): T {
 
 export default function Index() {
     const router = useRouter();
-    const query = (router.query.query || '') as string;
-
+    
+    const [query, setQuery] = useState<string>('');
     const [isSearching, setIsSearching] = useState(false);
     const [searchResults, setSearchResults] = useState<React.ReactNode | null>(null);
     const [alertData, setAlertData] = useState({
@@ -163,6 +163,13 @@ export default function Index() {
         severity: 'success' as AlertColor,
         message: '',
     });
+
+    useEffect(() => {
+        // set placeholder text to query param on load
+        if (query == '') {
+            setQuery((router.query.query || '') as string);
+        }
+    }, [router.query.query])
 
     const doSearch = (query: string) => {
         console.log('fuck');
@@ -261,11 +268,12 @@ export default function Index() {
                                     fullWidth
                                     margin="dense"
                                     value={query}
-                                    onChange={(event) =>
+                                    onChange={(event) => {
+                                        setQuery(event.target.value);
                                         router.replace({ query: { query: event.target.value } }, undefined, {
                                             shallow: true,
-                                        })
-                                    }
+                                        });
+                                    }}
                                     onKeyUp={(event) => {
                                         if (event.key === 'Enter') {
                                             doSearch(query);
