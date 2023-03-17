@@ -28,21 +28,31 @@ echo "$service $current_version $new_version"
 
 sed -i "s/$service $current_version/$service $new_version/g" versions.txt
 
+build_docker_service() {
+  service="$1"
+  name="$2"
+  new_version="$3"
+
+  image="ghcr.io/openchainxyz/$name:$new_version"
+
+  pushd "$service"
+  docker build . -t "$image" && docker push "$image"
+  exit_code=$?
+  popd
+
+  if [[ "$exit_code" != 0 ]]; then
+    return 1
+  fi
+}
+
 build_service() {
   service="$1"
   new_version="$2"
 
   if [[ "$service" == "frontend" ]]; then
-    image="ghcr.io/openchainxyz/$service:$new_version"
-
-    pushd "frontend"
-    docker build . -t "$image" && docker push "$image"
-    exit_code=$?
-    popd
-
-    if [[ "$exit_code" != 0 ]]; then
-      return 1
-    fi
+    build_docker_service "$1" "$1" "$2"
+  elif [[ "$service" == "solidity-compiler-srv" ]]; then
+    build_docker_service "cmd/$1" "$1" "$2"
   else
     bazel run "//:release-$service"
   fi
