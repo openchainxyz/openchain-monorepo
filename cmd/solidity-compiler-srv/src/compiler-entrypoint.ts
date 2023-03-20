@@ -1,4 +1,5 @@
-import * as fs from 'fs';
+import * as child_process from 'child_process';
+import { Readable } from 'stream';
 import { StandardInput } from './types';
 import { translateJsonCompilerOutput } from 'solc/translate';
 
@@ -70,10 +71,7 @@ const transformLegacyResponse = (output: string, isOptimized: boolean, compiledS
     return transformedResponse;
 };
 
-const compile = (solc: Solc, input: StandardInput): Promise<any> => {
-    // pls no
-    delete input.settings['modelChecker'];
-
+const compileInProcess = (solc: Solc, input: StandardInput): Promise<any> => {
     if (solc.lowlevel.compileStandard !== null) {
         return JSON.parse(solc.lowlevel.compileStandard(JSON.stringify(input)));
     }
@@ -91,7 +89,7 @@ const compile = (solc: Solc, input: StandardInput): Promise<any> => {
     const compiledSeeds = [];
     if (Array.isArray(nonDeterministicSeeds)) {
         for (const seed of nonDeterministicSeeds) {
-            compiledSeeds.push(compile(solc, seed));
+            compiledSeeds.push(compileInProcess(solc, seed));
         }
     }
 
@@ -124,10 +122,16 @@ const compile = (solc: Solc, input: StandardInput): Promise<any> => {
     throw new Error('compiler does not support any json interfaces');
 };
 
-const solc = setupMethods(require(process.argv[2]));
+const readAll = async (stream: Readable): Promise<string> => {
+    const chunks = [];
+    for await (const chunk of stream) {
+        chunks.push(chunk);
+    }
+    return Buffer.concat(chunks).toString('utf-8');
+};
 
-const stdin = JSON.parse(fs.readFileSync(process.stdin.fd, 'utf-8'));
-
-const output = compile(solc, stdin);
-
-process.stdout.write(JSON.stringify(output));
+readAll(process.stdin).then((contents) => {
+    const solc = setupMethods(require(process.argv[2]));
+    const output = compileInProcess(solc, JSON.parse(contents));
+    process.stdout.write(JSON.stringify(output));
+});
