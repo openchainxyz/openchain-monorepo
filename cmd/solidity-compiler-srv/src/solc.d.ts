@@ -1,18 +1,19 @@
-declare module "solc/translate" {
-
+declare module 'solc/translate' {
     function versionToSemver(version: string): string;
 
     function translateJsonCompilerOutput(input: any): any;
 }
 
-declare module "solc/wrapper" {
+declare module 'solc/wrapper' {
+    export type LowLevelAPI = {
+        compileStandard: null | ((string) => string);
+        compileCallback: null | ((string, boolean) => string);
+        compileMulti: null | ((string, boolean) => string);
+        compileSingle: null | ((string, boolean) => string);
+    };
+
     export interface Solc {
-        lowlevel: {
-            compileStandard: null | function(string): string;
-            compileCallback: null | function(string, boolean): string;
-            compileMulti: null | function(string, boolean): string;
-            compileSingle: null | function(string, boolean): string;
-        }
+        lowlevel: LowLevelAPI;
     }
 
     export default function (input: any): Solc;

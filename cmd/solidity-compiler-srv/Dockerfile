@@ -32,6 +32,8 @@ EXPOSE 3000
 
 ENV PORT 3000
 
+WORKDIR /app/dist
+
 ENTRYPOINT ["tini", "--"]
 
-CMD ["node", "--stack-size=4096", "dist/main.js"]
+CMD ["node", "main.js"]
