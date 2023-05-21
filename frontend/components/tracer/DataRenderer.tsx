@@ -118,12 +118,12 @@ export const DataRenderer = (props: DataRendererProps) => {
         return <>&apos;{toUtf8String(data)}&apos;</>;
     }
 
-    let paramType = ParamType.from(preferredType);
-    if (paramType.type === 'contract') {
-        paramType = ParamType.from('address');
-    }
 
     try {
+        let paramType = ParamType.from(preferredType);
+        if (paramType.type === 'contract') {
+            paramType = ParamType.from('address');
+        }
         if (decodedData === undefined && data) {
             decodedData = abiCoder.decode([paramType], data);
         }
