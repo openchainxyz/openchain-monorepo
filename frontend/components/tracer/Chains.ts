@@ -90,6 +90,28 @@ export const SupportedChains = [
         rpcUrl: 'https://rpcapi.fantom.network',
         blockexplorerUrl: 'https://ftmscan.com',
     },
+    {
+        chainId: 324,
+        id: 'zksync',
+        displayName: 'Zksync',
+        nativeTokenAddress: '0x6eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+        nativeSymbol: 'ETH',
+        coingeckoId: 'coingecko:ethereum',
+        defillamaPrefix: 'zksync',
+        rpcUrl: 'https://mainnet.era.zksync.io',
+        blockexplorerUrl: 'https://explorer.zksync.io/',
+    },
+    {
+        chainId: 59144,
+        id: 'linea',
+        displayName: 'Linea',
+        nativeTokenAddress: '0x7eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+        nativeSymbol: 'ETH',
+        coingeckoId: 'coingecko:ethereum',
+        defillamaPrefix: 'linea',
+        rpcUrl: 'https://rpc.linea.build',
+        blockexplorerUrl: 'https://lineascan.build/',
+    },
 ];
 
 const conduitAPIs: { [key: string]: string } = {
