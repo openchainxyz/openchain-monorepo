@@ -90,6 +90,17 @@ export const SupportedChains = [
         rpcUrl: 'https://rpcapi.fantom.network',
         blockexplorerUrl: 'https://ftmscan.com',
     },
+    {
+        chainId: 8454,
+        id: 'base',
+        displayName: 'Base',
+        nativeTokenAddress: '0x5eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+        nativeSymbol: 'ETH',
+        coingeckoId: 'coingecko:ethereum',
+        defillamaPrefix: 'ethereum',
+        rpcUrl: 'https://mainnet.base.org',
+        blockexplorerUrl: 'https://basescan.org',
+    },
 ];
 
 const conduitAPIs: { [key: string]: string } = {
