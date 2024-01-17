@@ -93,13 +93,11 @@ export const SupportedChains = [
 ];
 
 const conduitAPIs: { [key: string]: string } = {
-    conduit: 'https://api.exfac.xyz/txTracer/chainConfig/',
-    'conduit-staging': 'https://api.staging.exfac.xyz/txTracer/chainConfig/',
-    'conduit-localhost': 'http://localhost:8080/txTracer/chainConfig/',
+    conduit: 'https://api.conduit.xyz/txTracer/chainConfig/',
 };
 
 export const getChain = async (id: string): Promise<ChainConfig | undefined> => {
-    if (id.startsWith('conduit:') || id.startsWith('conduit-staging:') || id.startsWith('conduit-localhost:')) {
+    if (id.startsWith('conduit:')) {
         const tokens = id.split(':');
         if (tokens.length != 2) {
             return undefined;
