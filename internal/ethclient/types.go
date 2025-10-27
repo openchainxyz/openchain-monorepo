@@ -14,6 +14,8 @@ const (
 	BinanceTestnet    = "binance-testnet"
 	FantomMainnet     = "fantom"
 	FantomTestnet     = "fantom-testnet"
+	BaseMainnet       = "base"
+	BaseTestnet       = "base-testnet"
 	HecoMainnet       = "heco"
 	HecoTestnet       = "heco-testnet"
 	OptimismMainnet   = "optimism"
@@ -144,6 +146,7 @@ var ChainIDs = map[Chain]int{
 	MoonbaseTestnet:   1287,
 	MilkomedaMainnet:  2001,
 	FantomTestnet:     4002,
+	BaseMainnet:       8453,
 	EnergiMainnet:     39797,
 	ArbitrumMainnet:   42161,
 	CeloMainnet:       42220,
@@ -166,6 +169,7 @@ var ChainIDs = map[Chain]int{
 	DarwiniaPangolinTestnet: 43,
 	EVMOSMainnet:            9001,
 	EVMOSTestnet:            9000,
+	BaseTestnet:             84531,
 	GatherDevnet:            486217935,
 	GatherMainnet:           192837465,
 	GatherTestnet:           356256156,
