@@ -32,6 +32,8 @@ const (
 	CronosTestnet     = "cronos-testnet"
 	BittorrentMainnet = "bittorrent"
 	BittorrentTestnet = "bittorrent-testnet"
+	ZkSyncEraMainnet  = "zksync"
+	LineaMainnet      = "linea"
 
 	// blockscout
 	POAMainnet   = "poa"
@@ -132,6 +134,7 @@ var ChainIDs = map[Chain]int{
 	HecoTestnet:       256,
 	BobaMainnet:       288,
 	XDaiOptimism:      300,
+	ZkSyncEraMainnet:  324,
 	AstarShiden:       336,
 	CronosTestnet:     338,
 	MetisTestnet:      588,
@@ -151,6 +154,7 @@ var ChainIDs = map[Chain]int{
 	AvalancheMainnet:  43114,
 	CeloAlfajores:     44787,
 	EnergiTestnet:     49797,
+	LineaMainnet:      59144,
 	CeloBaklava:       62320,
 	EnergyWebTestnet:  73799,
 	PolygonTestnet:    80001,
